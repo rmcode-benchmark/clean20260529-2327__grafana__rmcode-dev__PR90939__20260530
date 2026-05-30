@@ -90,7 +90,6 @@ func newInstanceSettings(httpClientProvider *httpclient.Provider) datasource.Ins
 		if err != nil {
 			return nil, err
 		}
-		opts.ForwardHTTPHeaders = true
 
 		client, err := httpClientProvider.New(opts)
 		if err != nil {

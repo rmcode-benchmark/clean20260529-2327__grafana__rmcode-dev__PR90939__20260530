@@ -19,7 +19,7 @@ import (
 
 func TestSimpleServer(t *testing.T) {
 	testUserA := &identity.StaticRequester{
-		Type:           identity.TypeUser,
+		Namespace:      identity.NamespaceUser,
 		Login:          "testuser",
 		UserID:         123,
 		UserUID:        "u123",

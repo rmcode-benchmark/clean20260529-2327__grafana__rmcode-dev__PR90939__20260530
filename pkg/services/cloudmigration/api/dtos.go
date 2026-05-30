@@ -307,7 +307,6 @@ type GetSnapshotResponseDTO struct {
 type SnapshotResourceStats struct {
 	Types    map[MigrateDataType]int `json:"types"`
 	Statuses map[ItemStatus]int      `json:"statuses"`
-	Total    int                     `json:"total"`
 }
 
 // swagger:parameters getShapshotList

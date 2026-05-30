@@ -44,9 +44,6 @@ const BasicWithState: StoryFn<typeof Combobox> = (args) => {
       {...args}
       value={value}
       onChange={(val) => {
-        if (!val) {
-          return;
-        }
         setValue(val.value);
         action('onChange')(val);
       }}
@@ -77,9 +74,6 @@ const ManyOptionsStory: StoryFn<PropsAndCustomArgs> = ({ numberOfOptions }) => {
       options={options}
       value={value}
       onChange={(val) => {
-        if (!val) {
-          return;
-        }
         setValue(val.value);
         action('onChange')(val);
       }}

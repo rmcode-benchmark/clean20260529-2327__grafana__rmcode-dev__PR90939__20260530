@@ -256,8 +256,7 @@ type FrontendSettingsDTO struct {
 	PublicDashboardAccessToken string `json:"publicDashboardAccessToken"`
 	PublicDashboardsEnabled    bool   `json:"publicDashboardsEnabled"`
 
-	CloudMigrationIsTarget    bool   `json:"cloudMigrationIsTarget"`
-	CloudMigrationFeedbackURL string `json:"cloudMigrationFeedbackURL"`
+	CloudMigrationIsTarget bool `json:"cloudMigrationIsTarget"`
 
 	DateFormats setting.DateFormats `json:"dateFormats,omitempty"`
 

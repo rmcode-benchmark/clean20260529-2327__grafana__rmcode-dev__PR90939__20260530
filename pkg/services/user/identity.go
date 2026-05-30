@@ -43,7 +43,7 @@ type SignedInUser struct {
 	// IDToken is a signed token representing the identity that can be forwarded to plugins and external services.
 	// Will only be set when featuremgmt.FlagIdForwarding is enabled.
 	IDToken      string `json:"-" xorm:"-"`
-	NamespacedID identity.TypedID
+	NamespacedID identity.NamespaceID
 }
 
 func (u *SignedInUser) ShouldUpdateLastSeenAt() bool {
@@ -98,7 +98,7 @@ func (u *SignedInUser) GetAllowedKubernetesNamespace() string {
 // GetCacheKey returns a unique key for the entity.
 // Add an extra prefix to avoid collisions with other caches
 func (u *SignedInUser) GetCacheKey() string {
-	namespace, id := u.GetTypedID()
+	namespace, id := u.GetNamespacedID()
 	if !u.HasUniqueId() {
 		// Hack use the org role as id for identities that do not have a unique id
 		// e.g. anonymous and render key.
@@ -173,46 +173,46 @@ func (u *SignedInUser) GetOrgRole() identity.RoleType {
 }
 
 // GetID returns namespaced id for the entity
-func (u *SignedInUser) GetID() identity.TypedID {
-	ns, id := u.GetTypedID()
-	return identity.NewTypedIDString(ns, id)
+func (u *SignedInUser) GetID() identity.NamespaceID {
+	ns, id := u.GetNamespacedID()
+	return identity.NewNamespaceIDString(ns, id)
 }
 
-// GetTypedID returns the namespace and ID of the active entity
+// GetNamespacedID returns the namespace and ID of the active entity
 // The namespace is one of the constants defined in pkg/apimachinery/identity
-func (u *SignedInUser) GetTypedID() (identity.IdentityType, string) {
+func (u *SignedInUser) GetNamespacedID() (identity.Namespace, string) {
 	switch {
 	case u.ApiKeyID != 0:
-		return identity.TypeAPIKey, strconv.FormatInt(u.ApiKeyID, 10)
+		return identity.NamespaceAPIKey, strconv.FormatInt(u.ApiKeyID, 10)
 	case u.IsServiceAccount:
-		return identity.TypeServiceAccount, strconv.FormatInt(u.UserID, 10)
+		return identity.NamespaceServiceAccount, strconv.FormatInt(u.UserID, 10)
 	case u.UserID > 0:
-		return identity.TypeUser, strconv.FormatInt(u.UserID, 10)
+		return identity.NamespaceUser, strconv.FormatInt(u.UserID, 10)
 	case u.IsAnonymous:
-		return identity.TypeAnonymous, "0"
+		return identity.NamespaceAnonymous, "0"
 	case u.AuthenticatedBy == "render" && u.UserID == 0:
-		return identity.TypeRenderService, "0"
+		return identity.NamespaceRenderService, "0"
 	}
 
-	return u.NamespacedID.Type(), u.NamespacedID.ID()
+	return u.NamespacedID.Namespace(), u.NamespacedID.ID()
 }
 
 // GetUID returns namespaced uid for the entity
-func (u *SignedInUser) GetUID() identity.TypedID {
+func (u *SignedInUser) GetUID() identity.NamespaceID {
 	switch {
 	case u.ApiKeyID != 0:
-		return identity.NewTypedIDString(identity.TypeAPIKey, strconv.FormatInt(u.ApiKeyID, 10))
+		return identity.NewNamespaceIDString(identity.NamespaceAPIKey, strconv.FormatInt(u.ApiKeyID, 10))
 	case u.IsServiceAccount:
-		return identity.NewTypedIDString(identity.TypeServiceAccount, u.UserUID)
+		return identity.NewNamespaceIDString(identity.NamespaceServiceAccount, u.UserUID)
 	case u.UserID > 0:
-		return identity.NewTypedIDString(identity.TypeUser, u.UserUID)
+		return identity.NewNamespaceIDString(identity.NamespaceUser, u.UserUID)
 	case u.IsAnonymous:
-		return identity.NewTypedIDString(identity.TypeAnonymous, "0")
+		return identity.NewNamespaceIDString(identity.NamespaceAnonymous, "0")
 	case u.AuthenticatedBy == "render" && u.UserID == 0:
-		return identity.NewTypedIDString(identity.TypeRenderService, "0")
+		return identity.NewNamespaceIDString(identity.NamespaceRenderService, "0")
 	}
 
-	return identity.NewTypedIDString(identity.TypeEmpty, "0")
+	return identity.NewNamespaceIDString(identity.NamespaceEmpty, "0")
 }
 
 func (u *SignedInUser) GetAuthID() string {

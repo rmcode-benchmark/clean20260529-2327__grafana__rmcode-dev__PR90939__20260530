@@ -15,14 +15,16 @@ import (
 
 const GlobalOrgID = int64(0)
 
-var _ identity.Requester = (*Identity)(nil)
+type Requester = identity.Requester
+
+var _ Requester = (*Identity)(nil)
 
 type Identity struct {
 	// ID is the unique identifier for the entity in the Grafana database.
 	// If the entity is not found in the DB or this entity is non-persistent, this field will be empty.
-	ID identity.TypedID
+	ID NamespaceID
 	// UID is a unique identifier stored for the entity in Grafana database. Not all entities support uid so it can be empty.
-	UID identity.TypedID
+	UID NamespaceID
 	// OrgID is the active organization for the entity.
 	OrgID int64
 	// OrgName is the name of the active organization.
@@ -72,15 +74,15 @@ type Identity struct {
 	IDToken string
 }
 
-func (i *Identity) GetID() identity.TypedID {
+func (i *Identity) GetID() NamespaceID {
 	return i.ID
 }
 
-func (i *Identity) GetTypedID() (namespace identity.IdentityType, identifier string) {
-	return i.ID.Type(), i.ID.ID()
+func (i *Identity) GetNamespacedID() (namespace identity.Namespace, identifier string) {
+	return i.ID.Namespace(), i.ID.ID()
 }
 
-func (i *Identity) GetUID() identity.TypedID {
+func (i *Identity) GetUID() NamespaceID {
 	return i.UID
 }
 
@@ -93,7 +95,7 @@ func (i *Identity) GetAuthenticatedBy() string {
 }
 
 func (i *Identity) GetCacheKey() string {
-	namespace, id := i.GetTypedID()
+	namespace, id := i.GetNamespacedID()
 	if !i.HasUniqueId() {
 		// Hack use the org role as id for identities that do not have a unique id
 		// e.g. anonymous and render key.
@@ -189,10 +191,8 @@ func (i *Identity) HasRole(role org.RoleType) bool {
 }
 
 func (i *Identity) HasUniqueId() bool {
-	namespace, _ := i.GetTypedID()
-	return namespace == identity.TypeUser ||
-		namespace == identity.TypeServiceAccount ||
-		namespace == identity.TypeAPIKey
+	namespace, _ := i.GetNamespacedID()
+	return namespace == NamespaceUser || namespace == NamespaceServiceAccount || namespace == NamespaceAPIKey
 }
 
 func (i *Identity) IsAuthenticatedBy(providers ...string) bool {
@@ -220,7 +220,7 @@ func (i *Identity) SignedInUser() *user.SignedInUser {
 		AuthID:          i.AuthID,
 		AuthenticatedBy: i.AuthenticatedBy,
 		IsGrafanaAdmin:  i.GetIsGrafanaAdmin(),
-		IsAnonymous:     i.ID.IsType(identity.TypeAnonymous),
+		IsAnonymous:     i.ID.IsNamespace(NamespaceAnonymous),
 		IsDisabled:      i.IsDisabled,
 		HelpFlags1:      i.HelpFlags1,
 		LastSeenAt:      i.LastSeenAt,
@@ -230,14 +230,14 @@ func (i *Identity) SignedInUser() *user.SignedInUser {
 		NamespacedID:    i.ID,
 	}
 
-	if i.ID.IsType(identity.TypeAPIKey) {
+	if i.ID.IsNamespace(NamespaceAPIKey) {
 		id, _ := i.ID.ParseInt()
 		u.ApiKeyID = id
 	} else {
 		id, _ := i.ID.UserID()
 		u.UserID = id
 		u.UserUID = i.UID.ID()
-		u.IsServiceAccount = i.ID.IsType(identity.TypeServiceAccount)
+		u.IsServiceAccount = i.ID.IsNamespace(NamespaceServiceAccount)
 	}
 
 	return u

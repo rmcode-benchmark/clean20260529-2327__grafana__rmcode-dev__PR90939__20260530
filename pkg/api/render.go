@@ -65,7 +65,7 @@ func (hs *HTTPServer) RenderHandler(c *contextmodel.ReqContext) {
 		headers["Accept-Language"] = acceptLanguageHeader
 	}
 
-	userID, errID := identity.UserIdentifier(c.SignedInUser.GetTypedID())
+	userID, errID := identity.UserIdentifier(c.SignedInUser.GetNamespacedID())
 	if errID != nil {
 		hs.log.Error("Failed to parse user id", "err", errID)
 	}

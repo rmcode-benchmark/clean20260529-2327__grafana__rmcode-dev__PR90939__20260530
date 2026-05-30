@@ -47,7 +47,7 @@ func (hs *HTTPServer) SignUp(c *contextmodel.ReqContext) response.Response {
 		return response.Error(http.StatusUnprocessableEntity, "User with same email address already exists", nil)
 	}
 
-	userID, errID := identity.UserIdentifier(c.SignedInUser.GetTypedID())
+	userID, errID := identity.UserIdentifier(c.SignedInUser.GetNamespacedID())
 	if errID != nil {
 		hs.log.Error("Failed to parse user id", "err", errID)
 	}

@@ -147,7 +147,7 @@ func testSetup(t *testing.T, opts ...setupOption) (context.Context, storage.Inte
 
 	// Test with an admin identity
 	ctx := identity.WithRequester(context.Background(), &identity.StaticRequester{
-		Type:           identity.TypeUser,
+		Namespace:      identity.NamespaceUser,
 		Login:          "testuser",
 		UserID:         123,
 		UserUID:        "u123",

@@ -43,9 +43,9 @@ func (hs *HTTPServer) isDashboardStarredByUser(c *contextmodel.ReqContext, dashI
 		return false, nil
 	}
 
-	namespaceID, userIDstr := c.SignedInUser.GetTypedID()
+	namespaceID, userIDstr := c.SignedInUser.GetNamespacedID()
 
-	if namespaceID != identity.TypeUser {
+	if namespaceID != identity.NamespaceUser {
 		return false, nil
 	}
 
@@ -436,7 +436,7 @@ func (hs *HTTPServer) deleteDashboard(c *contextmodel.ReqContext) response.Respo
 		return response.Error(http.StatusBadRequest, "Use folders endpoint for deleting folders.", nil)
 	}
 
-	namespaceID, userIDStr := c.SignedInUser.GetTypedID()
+	namespaceID, userIDStr := c.SignedInUser.GetNamespacedID()
 
 	// disconnect all library elements for this dashboard
 	err = hs.LibraryElementService.DisconnectElementsFromDashboard(c.Req.Context(), dash.ID)
@@ -513,8 +513,8 @@ func (hs *HTTPServer) postDashboard(c *contextmodel.ReqContext, cmd dashboards.S
 	var err error
 
 	userID := int64(0)
-	namespaceID, userIDstr := c.SignedInUser.GetTypedID()
-	if namespaceID != identity.TypeUser && namespaceID != identity.TypeServiceAccount {
+	namespaceID, userIDstr := c.SignedInUser.GetNamespacedID()
+	if namespaceID != identity.NamespaceUser && namespaceID != identity.NamespaceServiceAccount {
 		hs.log.Debug("User does not belong to a user or service account namespace", "namespaceID", namespaceID, "userID", userIDstr)
 	} else {
 		userID, err = identity.IntIdentifier(namespaceID, userIDstr)
@@ -631,8 +631,8 @@ func (hs *HTTPServer) postDashboard(c *contextmodel.ReqContext, cmd dashboards.S
 func (hs *HTTPServer) GetHomeDashboard(c *contextmodel.ReqContext) response.Response {
 	userID := int64(0)
 	var err error
-	namespaceID, userIDstr := c.SignedInUser.GetTypedID()
-	if namespaceID != identity.TypeUser && namespaceID != identity.TypeServiceAccount {
+	namespaceID, userIDstr := c.SignedInUser.GetNamespacedID()
+	if namespaceID != identity.NamespaceUser && namespaceID != identity.NamespaceServiceAccount {
 		hs.log.Debug("User does not belong to a user or service account namespace", "namespaceID", namespaceID, "userID", userIDstr)
 	} else {
 		userID, err = identity.IntIdentifier(namespaceID, userIDstr)
@@ -1083,8 +1083,8 @@ func (hs *HTTPServer) RestoreDashboardVersion(c *contextmodel.ReqContext) respon
 	}
 
 	userID := int64(0)
-	namespaceID, userIDstr := c.SignedInUser.GetTypedID()
-	if namespaceID != identity.TypeUser && namespaceID != identity.TypeServiceAccount {
+	namespaceID, userIDstr := c.SignedInUser.GetNamespacedID()
+	if namespaceID != identity.NamespaceUser && namespaceID != identity.NamespaceServiceAccount {
 		hs.log.Warn("User does not belong to a user or service account namespace", "namespaceID", namespaceID, "userID", userIDstr)
 	} else {
 		userID, err = identity.IntIdentifier(namespaceID, userIDstr)

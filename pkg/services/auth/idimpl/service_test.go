@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/grafana/grafana/pkg/apimachinery/identity"
 	"github.com/grafana/grafana/pkg/infra/remotecache"
 	"github.com/grafana/grafana/pkg/services/auth"
 	"github.com/grafana/grafana/pkg/services/auth/idtest"
@@ -70,7 +69,7 @@ func TestService_SignIdentity(t *testing.T) {
 			featuremgmt.WithFeatures(featuremgmt.FlagIdForwarding),
 			&authntest.FakeService{}, nil,
 		)
-		token, err := s.SignIdentity(context.Background(), &authn.Identity{ID: identity.MustParseTypedID("user:1")})
+		token, err := s.SignIdentity(context.Background(), &authn.Identity{ID: authn.MustParseNamespaceID("user:1")})
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 	})
@@ -82,10 +81,10 @@ func TestService_SignIdentity(t *testing.T) {
 			&authntest.FakeService{}, nil,
 		)
 		token, err := s.SignIdentity(context.Background(), &authn.Identity{
-			ID:              identity.MustParseTypedID("user:1"),
+			ID:              authn.MustParseNamespaceID("user:1"),
 			AuthenticatedBy: login.AzureADAuthModule,
 			Login:           "U1",
-			UID:             identity.NewTypedIDString(identity.TypeUser, "edpu3nnt61se8e")})
+			UID:             authn.NewNamespaceIDString(authn.NamespaceUser, "edpu3nnt61se8e")})
 		require.NoError(t, err)
 
 		parsed, err := jwt.ParseSigned(token)

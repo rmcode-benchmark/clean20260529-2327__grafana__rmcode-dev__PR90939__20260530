@@ -135,10 +135,10 @@ func (d *DashboardSnapshotStore) SearchDashboardSnapshots(ctx context.Context, q
 			sess.Where("name LIKE ?", query.Name)
 		}
 
-		namespace, id := query.SignedInUser.GetTypedID()
+		namespace, id := query.SignedInUser.GetNamespacedID()
 		var userID int64
 
-		if namespace == identity.TypeServiceAccount || namespace == identity.TypeUser {
+		if namespace == identity.NamespaceServiceAccount || namespace == identity.NamespaceUser {
 			var err error
 			userID, err = identity.IntIdentifier(namespace, id)
 			if err != nil {
@@ -150,7 +150,7 @@ func (d *DashboardSnapshotStore) SearchDashboardSnapshots(ctx context.Context, q
 		switch {
 		case query.SignedInUser.GetOrgRole() == org.RoleAdmin:
 			sess.Where("org_id = ?", query.SignedInUser.GetOrgID())
-		case namespace != identity.TypeAnonymous:
+		case namespace != identity.NamespaceAnonymous:
 			sess.Where("org_id = ? AND user_id = ?", query.OrgID, userID)
 		default:
 			queryResult = snapshots

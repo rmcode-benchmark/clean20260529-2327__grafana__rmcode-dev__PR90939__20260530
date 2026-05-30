@@ -163,8 +163,8 @@ func (s *AccessControlStore) SearchUsersPermissions(ctx context.Context, orgID i
 	}
 	dbPerms := make([]UserRBACPermission, 0)
 
-	userID := int64(-1)
-	if options.TypedID.Type() != "" {
+	var userID int64
+	if options.NamespacedID != "" {
 		var err error
 		userID, err = options.ComputeUserID()
 		if err != nil {
@@ -181,26 +181,26 @@ func (s *AccessControlStore) SearchUsersPermissions(ctx context.Context, orgID i
 		params := []any{}
 
 		direct := userAssignsSQL
-		if userID >= 0 {
+		if options.NamespacedID != "" {
 			direct += " WHERE ur.user_id = ?"
 			params = append(params, userID)
 		}
 
 		team := teamAssignsSQL
-		if userID >= 0 {
+		if options.NamespacedID != "" {
 			team += " WHERE tm.user_id = ?"
 			params = append(params, userID)
 		}
 
 		basic := basicRoleAssignsSQL
-		if userID >= 0 {
+		if options.NamespacedID != "" {
 			basic += " WHERE ou.user_id = ?"
 			params = append(params, userID)
 		}
 
 		grafanaAdmin := fmt.Sprintf(grafanaAdminAssignsSQL, s.sql.ReadReplica().Quote("user"))
 		params = append(params, accesscontrol.RoleGrafanaAdmin)
-		if userID >= 0 {
+		if options.NamespacedID != "" {
 			grafanaAdmin += " AND sa.user_id = ?"
 			params = append(params, userID)
 		}

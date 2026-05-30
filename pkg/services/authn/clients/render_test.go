@@ -9,7 +9,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/grafana/grafana/pkg/apimachinery/identity"
 	"github.com/grafana/grafana/pkg/services/authn"
 	"github.com/grafana/grafana/pkg/services/login"
 	"github.com/grafana/grafana/pkg/services/org"
@@ -36,7 +35,7 @@ func TestRender_Authenticate(t *testing.T) {
 				},
 			},
 			expectedIdentity: &authn.Identity{
-				ID:              identity.MustParseTypedID("render:0"),
+				ID:              authn.MustParseNamespaceID("render:0"),
 				OrgID:           1,
 				OrgRoles:        map[int64]org.RoleType{1: org.RoleViewer},
 				AuthenticatedBy: login.RenderModule,
@@ -57,7 +56,7 @@ func TestRender_Authenticate(t *testing.T) {
 				},
 			},
 			expectedIdentity: &authn.Identity{
-				ID:              identity.MustParseTypedID("user:1"),
+				ID:              authn.MustParseNamespaceID("user:1"),
 				AuthenticatedBy: login.RenderModule,
 				ClientParams:    authn.ClientParams{FetchSyncedUser: true, SyncPermissions: true},
 			},

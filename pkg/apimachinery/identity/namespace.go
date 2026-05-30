@@ -6,131 +6,120 @@ import (
 	"strings"
 )
 
-type IdentityType string
+type Namespace string
 
 const (
-	TypeUser           IdentityType = "user"
-	TypeAPIKey         IdentityType = "api-key"
-	TypeServiceAccount IdentityType = "service-account"
-	TypeAnonymous      IdentityType = "anonymous"
-	TypeRenderService  IdentityType = "render"
-	TypeAccessPolicy   IdentityType = "access-policy"
-	TypeProvisioning   IdentityType = "provisioning"
-	TypeEmpty          IdentityType = ""
+	NamespaceUser           Namespace = "user"
+	NamespaceAPIKey         Namespace = "api-key"
+	NamespaceServiceAccount Namespace = "service-account"
+	NamespaceAnonymous      Namespace = "anonymous"
+	NamespaceRenderService  Namespace = "render"
+	NamespaceAccessPolicy   Namespace = "access-policy"
+	NamespaceProvisioning   Namespace = "provisioning"
+	NamespaceEmpty          Namespace = ""
 )
 
-func (n IdentityType) String() string {
+func (n Namespace) String() string {
 	return string(n)
 }
 
-func ParseType(str string) (IdentityType, error) {
+func ParseNamespace(str string) (Namespace, error) {
 	switch str {
-	case string(TypeUser):
-		return TypeUser, nil
-	case string(TypeAPIKey):
-		return TypeAPIKey, nil
-	case string(TypeServiceAccount):
-		return TypeServiceAccount, nil
-	case string(TypeAnonymous):
-		return TypeAnonymous, nil
-	case string(TypeRenderService):
-		return TypeRenderService, nil
-	case string(TypeAccessPolicy):
-		return TypeAccessPolicy, nil
+	case string(NamespaceUser):
+		return NamespaceUser, nil
+	case string(NamespaceAPIKey):
+		return NamespaceAPIKey, nil
+	case string(NamespaceServiceAccount):
+		return NamespaceServiceAccount, nil
+	case string(NamespaceAnonymous):
+		return NamespaceAnonymous, nil
+	case string(NamespaceRenderService):
+		return NamespaceRenderService, nil
+	case string(NamespaceAccessPolicy):
+		return NamespaceAccessPolicy, nil
 	default:
-		return "", ErrInvalidTypedID.Errorf("got invalid identity type %s", str)
+		return "", ErrInvalidNamespaceID.Errorf("got invalid namespace %s", str)
 	}
 }
 
-// IsIdentityType returns true if type matches any expected identity type
-func IsIdentityType(typ IdentityType, expected ...IdentityType) bool {
-	for _, e := range expected {
-		if typ == e {
-			return true
-		}
-	}
+var AnonymousNamespaceID = NewNamespaceID(NamespaceAnonymous, 0)
 
-	return false
-}
-
-var AnonymousTypedID = NewTypedID(TypeAnonymous, 0)
-
-func ParseTypedID(str string) (TypedID, error) {
-	var typeID TypedID
+func ParseNamespaceID(str string) (NamespaceID, error) {
+	var namespaceID NamespaceID
 
 	parts := strings.Split(str, ":")
 	if len(parts) != 2 {
-		return typeID, ErrInvalidTypedID.Errorf("expected typed id to have 2 parts")
+		return namespaceID, ErrInvalidNamespaceID.Errorf("expected namespace id to have 2 parts")
 	}
 
-	t, err := ParseType(parts[0])
+	namespace, err := ParseNamespace(parts[0])
 	if err != nil {
-		return typeID, err
+		return namespaceID, err
 	}
 
-	typeID.id = parts[1]
-	typeID.t = t
+	namespaceID.id = parts[1]
+	namespaceID.namespace = namespace
 
-	return typeID, nil
+	return namespaceID, nil
 }
 
-// MustParseTypedID parses namespace id, it will panic if it fails to do so.
+// MustParseNamespaceID parses namespace id, it will panic if it fails to do so.
 // Suitable to use in tests or when we can guarantee that we pass a correct format.
-func MustParseTypedID(str string) TypedID {
-	typeID, err := ParseTypedID(str)
+func MustParseNamespaceID(str string) NamespaceID {
+	namespaceID, err := ParseNamespaceID(str)
 	if err != nil {
 		panic(err)
 	}
-	return typeID
+	return namespaceID
 }
 
-func NewTypedID(t IdentityType, id int64) TypedID {
-	return TypedID{
-		id: strconv.FormatInt(id, 10),
-		t:  t,
+func NewNamespaceID(namespace Namespace, id int64) NamespaceID {
+	return NamespaceID{
+		id:        strconv.FormatInt(id, 10),
+		namespace: namespace,
 	}
 }
 
-// NewTypedIDString creates a new TypedID with a string id
-func NewTypedIDString(t IdentityType, id string) TypedID {
-	return TypedID{
-		id: id,
-		t:  t,
+// NewNamespaceIDString creates a new NamespaceID with a string id
+func NewNamespaceIDString(namespace Namespace, id string) NamespaceID {
+	return NamespaceID{
+		id:        id,
+		namespace: namespace,
 	}
 }
 
 // FIXME: use this instead of encoded string through the codebase
-type TypedID struct {
-	id string
-	t  IdentityType
+type NamespaceID struct {
+	id        string
+	namespace Namespace
 }
 
-func (ni TypedID) ID() string {
+func (ni NamespaceID) ID() string {
 	return ni.id
 }
 
 // UserID will try to parse and int64 identifier if namespace is either user or service-account.
 // For all other namespaces '0' will be returned.
-func (ni TypedID) UserID() (int64, error) {
-	if ni.IsType(TypeUser, TypeServiceAccount) {
+func (ni NamespaceID) UserID() (int64, error) {
+	if ni.IsNamespace(NamespaceUser, NamespaceServiceAccount) {
 		return ni.ParseInt()
 	}
 	return 0, nil
 }
 
 // ParseInt will try to parse the id as an int64 identifier.
-func (ni TypedID) ParseInt() (int64, error) {
+func (ni NamespaceID) ParseInt() (int64, error) {
 	return strconv.ParseInt(ni.id, 10, 64)
 }
 
-func (ni TypedID) Type() IdentityType {
-	return ni.t
+func (ni NamespaceID) Namespace() Namespace {
+	return ni.namespace
 }
 
-func (ni TypedID) IsType(expected ...IdentityType) bool {
-	return IsIdentityType(ni.t, expected...)
+func (ni NamespaceID) IsNamespace(expected ...Namespace) bool {
+	return IsNamespace(ni.namespace, expected...)
 }
 
-func (ni TypedID) String() string {
-	return fmt.Sprintf("%s:%s", ni.t, ni.id)
+func (ni NamespaceID) String() string {
+	return fmt.Sprintf("%s:%s", ni.namespace, ni.id)
 }

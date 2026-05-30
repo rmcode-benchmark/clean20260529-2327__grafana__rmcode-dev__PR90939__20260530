@@ -7,13 +7,13 @@ import (
 
 type Requester interface {
 	// GetID returns namespaced id for the entity
-	GetID() TypedID
-	// GetTypedID returns the namespace and ID of the active entity.
+	GetID() NamespaceID
+	// GetNamespacedID returns the namespace and ID of the active entity.
 	// The namespace is one of the constants defined in pkg/apimachinery/identity.
 	// Deprecated: use GetID instead
-	GetTypedID() (kind IdentityType, identifier string)
+	GetNamespacedID() (namespace Namespace, identifier string)
 	// GetUID returns namespaced uid for the entity
-	GetUID() TypedID
+	GetUID() NamespaceID
 	// GetDisplayName returns the display name of the active entity.
 	// The display name is the name if it is set, otherwise the login or email.
 	GetDisplayName() string
@@ -68,14 +68,25 @@ type Requester interface {
 	GetIDToken() string
 }
 
+// IsNamespace returns true if namespace matches any expected namespace
+func IsNamespace(namespace Namespace, expected ...Namespace) bool {
+	for _, e := range expected {
+		if namespace == e {
+			return true
+		}
+	}
+
+	return false
+}
+
 // IntIdentifier converts a string identifier to an int64.
 // Applicable for users, service accounts, api keys and renderer service.
 // Errors if the identifier is not initialized or if namespace is not recognized.
-func IntIdentifier(kind IdentityType, identifier string) (int64, error) {
-	if IsIdentityType(kind, TypeUser, TypeAPIKey, TypeServiceAccount, TypeRenderService) {
+func IntIdentifier(namespace Namespace, identifier string) (int64, error) {
+	if IsNamespace(namespace, NamespaceUser, NamespaceAPIKey, NamespaceServiceAccount, NamespaceRenderService) {
 		id, err := strconv.ParseInt(identifier, 10, 64)
 		if err != nil {
-			return 0, fmt.Errorf("unrecognized format for valid type %s: %w", kind, err)
+			return 0, fmt.Errorf("unrecognized format for valid namespace %s: %w", namespace, err)
 		}
 
 		if id < 1 {
@@ -91,14 +102,14 @@ func IntIdentifier(kind IdentityType, identifier string) (int64, error) {
 // UserIdentifier converts a string identifier to an int64.
 // Errors if the identifier is not initialized or if namespace is not recognized.
 // Returns 0 if the namespace is not user or service account
-func UserIdentifier(kind IdentityType, identifier string) (int64, error) {
-	userID, err := IntIdentifier(kind, identifier)
+func UserIdentifier(namespace Namespace, identifier string) (int64, error) {
+	userID, err := IntIdentifier(namespace, identifier)
 	if err != nil {
 		// FIXME: return this error once entity namespaces are handled by stores
 		return 0, nil
 	}
 
-	if IsIdentityType(kind, TypeUser, TypeServiceAccount) {
+	if IsNamespace(namespace, NamespaceUser, NamespaceServiceAccount) {
 		return userID, nil
 	}
 

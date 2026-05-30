@@ -2,6 +2,7 @@ package accesscontrol
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -83,8 +84,8 @@ type SearchOptions struct {
 	Action       string
 	ActionSets   []string
 	Scope        string
-	TypedID      identity.TypedID // ID of the identity (ex: user:3, service-account:4)
-	wildcards    Wildcards        // private field computed based on the Scope
+	NamespacedID string    // ID of the identity (ex: user:3, service-account:4)
+	wildcards    Wildcards // private field computed based on the Scope
 	RolePrefixes []string
 }
 
@@ -104,17 +105,21 @@ func (s *SearchOptions) Wildcards() []string {
 }
 
 func (s *SearchOptions) ComputeUserID() (int64, error) {
-	id, err := s.TypedID.ParseInt()
+	if s.NamespacedID == "" {
+		return 0, errors.New("namespacedID must be set")
+	}
+
+	id, err := identity.ParseNamespaceID(s.NamespacedID)
 	if err != nil {
 		return 0, err
 	}
 
 	// Validate namespace type is user or service account
-	if s.TypedID.Type() != identity.TypeUser && s.TypedID.Type() != identity.TypeServiceAccount {
-		return 0, fmt.Errorf("invalid type: %s", s.TypedID.Type())
+	if id.Namespace() != identity.NamespaceUser && id.Namespace() != identity.NamespaceServiceAccount {
+		return 0, fmt.Errorf("invalid namespace: %s", id.Namespace())
 	}
 
-	return id, nil
+	return id.ParseInt()
 }
 
 type SyncUserRolesCommand struct {

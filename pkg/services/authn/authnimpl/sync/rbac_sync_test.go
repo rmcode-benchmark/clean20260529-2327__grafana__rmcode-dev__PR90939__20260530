@@ -4,10 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/grafana/grafana/pkg/apimachinery/identity"
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/tracing"
 	"github.com/grafana/grafana/pkg/services/accesscontrol"
@@ -15,6 +11,8 @@ import (
 	"github.com/grafana/grafana/pkg/services/authn"
 	"github.com/grafana/grafana/pkg/services/login"
 	"github.com/grafana/grafana/pkg/services/org"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRBACSync_SyncPermission(t *testing.T) {
@@ -26,14 +24,14 @@ func TestRBACSync_SyncPermission(t *testing.T) {
 	testCases := []testCase{
 		{
 			name:     "enriches the identity successfully when SyncPermissions is true",
-			identity: &authn.Identity{ID: identity.MustParseTypedID("user:2"), OrgID: 1, ClientParams: authn.ClientParams{SyncPermissions: true}},
+			identity: &authn.Identity{ID: authn.MustParseNamespaceID("user:2"), OrgID: 1, ClientParams: authn.ClientParams{SyncPermissions: true}},
 			expectedPermissions: []accesscontrol.Permission{
 				{Action: accesscontrol.ActionUsersRead},
 			},
 		},
 		{
 			name:     "does not load the permissions when SyncPermissions is false",
-			identity: &authn.Identity{ID: identity.MustParseTypedID("user:2"), OrgID: 1, ClientParams: authn.ClientParams{SyncPermissions: true}},
+			identity: &authn.Identity{ID: authn.MustParseNamespaceID("user:2"), OrgID: 1, ClientParams: authn.ClientParams{SyncPermissions: true}},
 			expectedPermissions: []accesscontrol.Permission{
 				{Action: accesscontrol.ActionUsersRead},
 			},
@@ -67,7 +65,7 @@ func TestRBACSync_SyncCloudRoles(t *testing.T) {
 			desc:   "should call sync when authenticated with grafana com and has viewer role",
 			module: login.GrafanaComAuthModule,
 			identity: &authn.Identity{
-				ID:       identity.NewTypedID(identity.TypeUser, 1),
+				ID:       authn.NewNamespaceID(authn.NamespaceUser, 1),
 				OrgID:    1,
 				OrgRoles: map[int64]org.RoleType{1: org.RoleViewer},
 			},
@@ -78,7 +76,7 @@ func TestRBACSync_SyncCloudRoles(t *testing.T) {
 			desc:   "should call sync when authenticated with grafana com and has editor role",
 			module: login.GrafanaComAuthModule,
 			identity: &authn.Identity{
-				ID:       identity.NewTypedID(identity.TypeUser, 1),
+				ID:       authn.NewNamespaceID(authn.NamespaceUser, 1),
 				OrgID:    1,
 				OrgRoles: map[int64]org.RoleType{1: org.RoleEditor},
 			},
@@ -89,7 +87,7 @@ func TestRBACSync_SyncCloudRoles(t *testing.T) {
 			desc:   "should call sync when authenticated with grafana com and has admin role",
 			module: login.GrafanaComAuthModule,
 			identity: &authn.Identity{
-				ID:       identity.NewTypedID(identity.TypeUser, 1),
+				ID:       authn.NewNamespaceID(authn.NamespaceUser, 1),
 				OrgID:    1,
 				OrgRoles: map[int64]org.RoleType{1: org.RoleAdmin},
 			},
@@ -100,7 +98,7 @@ func TestRBACSync_SyncCloudRoles(t *testing.T) {
 			desc:   "should not call sync when authenticated with grafana com and has invalid role",
 			module: login.GrafanaComAuthModule,
 			identity: &authn.Identity{
-				ID:       identity.NewTypedID(identity.TypeUser, 1),
+				ID:       authn.NewNamespaceID(authn.NamespaceUser, 1),
 				OrgID:    1,
 				OrgRoles: map[int64]org.RoleType{1: org.RoleType("something else")},
 			},
@@ -111,7 +109,7 @@ func TestRBACSync_SyncCloudRoles(t *testing.T) {
 			desc:   "should not call sync when not authenticated with grafana com",
 			module: login.LDAPAuthModule,
 			identity: &authn.Identity{
-				ID:       identity.NewTypedID(identity.TypeUser, 1),
+				ID:       authn.NewNamespaceID(authn.NamespaceUser, 1),
 				OrgID:    1,
 				OrgRoles: map[int64]org.RoleType{1: org.RoleAdmin},
 			},
@@ -157,7 +155,7 @@ func TestRBACSync_cloudRolesToAddAndRemove(t *testing.T) {
 		{
 			desc: "should map Cloud Viewer to Grafana Cloud Viewer and Support ticket reader",
 			identity: &authn.Identity{
-				ID:       identity.NewTypedID(identity.TypeUser, 1),
+				ID:       authn.NewNamespaceID(authn.NamespaceUser, 1),
 				OrgID:    1,
 				OrgRoles: map[int64]org.RoleType{1: org.RoleViewer},
 			},
@@ -176,7 +174,7 @@ func TestRBACSync_cloudRolesToAddAndRemove(t *testing.T) {
 		{
 			desc: "should map Cloud Editor to Grafana Cloud Editor and Support ticket admin",
 			identity: &authn.Identity{
-				ID:       identity.NewTypedID(identity.TypeUser, 1),
+				ID:       authn.NewNamespaceID(authn.NamespaceUser, 1),
 				OrgID:    1,
 				OrgRoles: map[int64]org.RoleType{1: org.RoleEditor},
 			},
@@ -195,7 +193,7 @@ func TestRBACSync_cloudRolesToAddAndRemove(t *testing.T) {
 		{
 			desc: "should map Cloud Admin to Grafana Cloud Admin and Support ticket admin",
 			identity: &authn.Identity{
-				ID:       identity.NewTypedID(identity.TypeUser, 1),
+				ID:       authn.NewNamespaceID(authn.NamespaceUser, 1),
 				OrgID:    1,
 				OrgRoles: map[int64]org.RoleType{1: org.RoleAdmin},
 			},
@@ -214,7 +212,7 @@ func TestRBACSync_cloudRolesToAddAndRemove(t *testing.T) {
 		{
 			desc: "should return an error for not supported role",
 			identity: &authn.Identity{
-				ID:       identity.NewTypedID(identity.TypeUser, 1),
+				ID:       authn.NewNamespaceID(authn.NamespaceUser, 1),
 				OrgID:    1,
 				OrgRoles: map[int64]org.RoleType{1: org.RoleNone},
 			},
@@ -236,7 +234,7 @@ func TestRBACSync_cloudRolesToAddAndRemove(t *testing.T) {
 
 func setupTestEnv() *RBACSync {
 	acMock := &acmock.Mock{
-		GetUserPermissionsFunc: func(ctx context.Context, siu identity.Requester, o accesscontrol.Options) ([]accesscontrol.Permission, error) {
+		GetUserPermissionsFunc: func(ctx context.Context, siu authn.Requester, o accesscontrol.Options) ([]accesscontrol.Permission, error) {
 			return []accesscontrol.Permission{
 				{Action: accesscontrol.ActionUsersRead},
 			}, nil

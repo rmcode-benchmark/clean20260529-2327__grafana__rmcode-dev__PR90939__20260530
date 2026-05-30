@@ -24,7 +24,6 @@ import (
 	"github.com/grafana/grafana/pkg/services/folder"
 	"github.com/grafana/grafana/pkg/services/folder/foldertest"
 	secretsfakes "github.com/grafana/grafana/pkg/services/secrets/fakes"
-	secretskv "github.com/grafana/grafana/pkg/services/secrets/kvstore"
 	"github.com/grafana/grafana/pkg/services/user"
 	"github.com/grafana/grafana/pkg/setting"
 	"github.com/prometheus/client_golang/prometheus"
@@ -439,7 +438,6 @@ func setUpServiceTest(t *testing.T, withDashboardMock bool) cloudmigration.Servi
 			featuremgmt.FlagDashboardRestore),
 		sqlStore,
 		dsService,
-		secretskv.NewFakeSQLSecretsKVStore(t),
 		secretsService,
 		rr,
 		prometheus.DefaultRegisterer,

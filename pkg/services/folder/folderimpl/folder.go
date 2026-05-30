@@ -580,8 +580,8 @@ func (s *Service) Create(ctx context.Context, cmd *folder.CreateFolderCommand) (
 
 	userID := int64(0)
 	var err error
-	namespaceID, userIDstr := user.GetTypedID()
-	if namespaceID != identity.TypeUser && namespaceID != identity.TypeServiceAccount {
+	namespaceID, userIDstr := user.GetNamespacedID()
+	if namespaceID != identity.NamespaceUser && namespaceID != identity.NamespaceServiceAccount {
 		s.log.Debug("User does not belong to a user or service account namespace, using 0 as user ID", "namespaceID", namespaceID, "userID", userIDstr)
 	} else {
 		userID, err = identity.IntIdentifier(namespaceID, userIDstr)
@@ -668,7 +668,7 @@ func (s *Service) Update(ctx context.Context, cmd *folder.UpdateFolderCommand) (
 		}
 
 		if cmd.NewTitle != nil {
-			namespace, id := cmd.SignedInUser.GetTypedID()
+			namespace, id := cmd.SignedInUser.GetNamespacedID()
 
 			metrics.MFolderIDsServiceCount.WithLabelValues(metrics.Folder).Inc()
 			if err := s.bus.Publish(ctx, &events.FolderTitleUpdated{
@@ -725,8 +725,8 @@ func (s *Service) legacyUpdate(ctx context.Context, cmd *folder.UpdateFolderComm
 	}
 
 	var userID int64
-	namespace, id := cmd.SignedInUser.GetTypedID()
-	if namespace == identity.TypeUser || namespace == identity.TypeServiceAccount {
+	namespace, id := cmd.SignedInUser.GetNamespacedID()
+	if namespace == identity.NamespaceUser || namespace == identity.NamespaceServiceAccount {
 		userID, err = identity.IntIdentifier(namespace, id)
 		if err != nil {
 			s.log.ErrorContext(ctx, "failed to parse user ID", "namespace", namespace, "userID", id, "error", err)
@@ -1142,8 +1142,8 @@ func (s *Service) buildSaveDashboardCommand(ctx context.Context, dto *dashboards
 	}
 
 	userID := int64(0)
-	namespaceID, userIDstr := dto.User.GetTypedID()
-	if namespaceID != identity.TypeUser && namespaceID != identity.TypeServiceAccount {
+	namespaceID, userIDstr := dto.User.GetNamespacedID()
+	if namespaceID != identity.NamespaceUser && namespaceID != identity.NamespaceServiceAccount {
 		s.log.Warn("User does not belong to a user or service account namespace, using 0 as user ID", "namespaceID", namespaceID, "userID", userIDstr)
 	} else {
 		userID, err = identity.IntIdentifier(namespaceID, userIDstr)
